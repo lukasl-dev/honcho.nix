@@ -26,5 +26,5 @@ jobs:
 
       - name: Check formatting and workflows
         run: |
-          nix develop --command nixfmt --check flake.nix package.nix module.nix update.nix tests/*.nix
+          nix develop --command nixfmt --check ./*.nix ./honcho/*.nix ./honcho-cli/*.nix ./tests/*.nix
           nix develop --command actionlint

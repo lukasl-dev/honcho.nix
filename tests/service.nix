@@ -63,7 +63,14 @@ let
           requires = [ "honcho-test-secrets.service" ];
         };
 
-        environment.systemPackages = [ pkgs.curl ];
+        environment.systemPackages = [
+          pkgs.curl
+          self.packages.${pkgs.stdenv.hostPlatform.system}.honcho-cli
+        ];
+        users.users.cli = {
+          isNormalUser = true;
+          home = "/home/cli";
+        };
         virtualisation = {
           memorySize = 4096;
           cores = 2;

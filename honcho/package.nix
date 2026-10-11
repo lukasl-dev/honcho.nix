@@ -1,26 +1,15 @@
 {
   lib,
   stdenvNoCC,
-  callPackage,
-  python313,
   makeWrapper,
   fetchurl,
   linkFarm,
   src,
-  uv2nix,
-  pyproject-nix,
-  pyproject-build-systems,
+  pythonSet,
   extras ? [ ],
 }:
 
 let
-  workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = src; };
-  pythonSet = (callPackage pyproject-nix.build.packages { python = python313; }).overrideScope (
-    lib.composeManyExtensions [
-      pyproject-build-systems.overlays.wheel
-      (workspace.mkPyprojectOverlay { sourcePreference = "wheel"; })
-    ]
-  );
   pythonEnv = pythonSet.mkVirtualEnv "honcho-python-env" { honcho = extras; };
 
   # tiktoken names cached encodings by SHA-1 of their download URL.
@@ -66,7 +55,7 @@ stdenvNoCC.mkDerivation {
       --set-default PYTHONDONTWRITEBYTECODE 1
     )
 
-    makeWrapper ${pythonEnv}/bin/uvicorn $out/bin/honcho "''${wrapperArgs[@]}" \
+    makeWrapper ${pythonEnv}/bin/uvicorn $out/bin/honcho-server "''${wrapperArgs[@]}" \
       --add-flags "src.main:app"
     makeWrapper ${pythonEnv}/bin/python $out/bin/honcho-worker "''${wrapperArgs[@]}" \
       --add-flags "-m src.deriver"
@@ -86,7 +75,7 @@ stdenvNoCC.mkDerivation {
     description = "Memory and reasoning API for AI agents";
     homepage = "https://github.com/plastic-labs/honcho";
     license = lib.licenses.agpl3Only;
-    mainProgram = "honcho";
+    mainProgram = "honcho-server";
     platforms = lib.platforms.linux;
   };
 }

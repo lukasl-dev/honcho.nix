@@ -5,6 +5,7 @@ Native [Honcho](https://github.com/plastic-labs/honcho) packaging and a NixOS se
 ```sh
 nix build
 nix run -- --help
+nix run .#honcho-cli -- --help
 nix develop
 nix flake check
 nix run .#update
@@ -12,6 +13,10 @@ nix build .#docs-md
 ```
 
 ## NixOS
+
+`honcho` packages the server (`honcho-server`); `honcho-cli` provides the upstream `honcho` client command. Both use the pinned upstream workspace and lockfile.
+
+The CLI reads `HONCHO_BASE_URL`, `HONCHO_API_KEY` (a client JWT) and optional `HONCHO_WORKSPACE_ID`. Its Docker stack commands still require Docker/Compose; they are separate from the native NixOS service.
 
 Add `honcho.url = "github:lukasl-dev/honcho.nix";` to your flake inputs:
 

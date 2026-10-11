@@ -84,6 +84,30 @@ def run_service_test(vm: QemuMachine, client: QemuMachine, phase: Subtest) -> No
             + shlex.quote(query)
         ).strip()
 
+    def cli(args: list[str], *, token: str = admin, expected: int = 0) -> object:
+        command = [
+            "runuser",
+            "-u",
+            "cli",
+            "--",
+            "env",
+            "HOME=/home/cli",
+            "HONCHO_CONFIG_DIR=/home/cli/.honcho-fixture",
+            "HONCHO_NO_UPDATE_CHECK=1",
+            "HONCHO_BASE_URL=http://127.0.0.1:8000",
+            "HONCHO_WORKSPACE_ID=cli-integration",
+            "HONCHO_PEER_ID=bob",
+            "HONCHO_API_KEY=" + token,
+            "honcho",
+            *args,
+            "--json",
+        ]
+        code, output = vm.execute(
+            shlex.join(command) + " 2>&1", timeout=timedelta(seconds=30)
+        )
+        assert code == expected, f"CLI exited {code}; expected {expected}: {output}"
+        return cast(object, json.loads(output))
+
     def worker_ready() -> None:
         vm.wait_for_unit("honcho-worker.service")
         vm.wait_until_succeeds(
@@ -96,7 +120,8 @@ def run_service_test(vm: QemuMachine, client: QemuMachine, phase: Subtest) -> No
     def api_ready() -> None:
         vm.wait_for_unit("honcho.service")
         vm.wait_until_succeeds(
-            "curl --fail --silent http://127.0.0.1:8000/health", timeout=timedelta(minutes=2)
+            "curl --fail --silent http://127.0.0.1:8000/health",
+            timeout=timedelta(minutes=2),
         )
         assert request("GET", "/health", token=None) == {"status": "ok"}
 
@@ -354,6 +379,62 @@ def run_service_test(vm: QemuMachine, client: QemuMachine, phase: Subtest) -> No
             assert (
                 sql("SELECT EXISTS (SELECT 1 FROM peers WHERE name = 'alice')") == "f"
             )
+            check_no_model_work()
+
+        with phase("installed CLI authenticates and manages native-server resources"):
+            assert cli(["workspace", "create", "cli-integration"]) == {
+                "workspace_id": "cli-integration"
+            }
+            assert cli(["workspace", "create", "cli-integration"]) == {
+                "workspace_id": "cli-integration"
+            }
+
+            peer = cast(
+                dict[str, Json],
+                cli(
+                    [
+                        "peer",
+                        "create",
+                        "bob",
+                        "--no-observe-me",
+                        "--metadata",
+                        '{"fixture":true}',
+                    ]
+                ),
+            )
+            assert peer["peer_id"] == "bob"
+            assert peer["metadata"] == {"fixture": True}
+            assert cli(["peer", "get-metadata"]) == {
+                "peer_id": "bob",
+                "metadata": {"fixture": True},
+            }
+
+            assert cli(["session", "create", "cli-conversation", "--peers", "bob"]) == {
+                "session_id": "cli-conversation",
+                "peers": ["bob"],
+            }
+            sessions = cast(list[dict[str, Json]], cli(["session", "list"]))
+            assert len(sessions) == 1
+            assert sessions[0]["id"] == "cli-conversation"
+
+            inspected = cast(dict[str, Json], cli(["workspace", "inspect"]))
+            assert inspected["workspace_id"] == "cli-integration"
+            assert inspected["peer_count"] == 1
+            assert inspected["session_count"] == 1
+            membership = cast(
+                ResourcePage,
+                request(
+                    "GET",
+                    "/v3/workspaces/cli-integration/sessions/cli-conversation/peers",
+                ),
+            )
+            assert [peer["id"] for peer in membership["items"]] == ["bob"]
+
+            error = cast(
+                dict[str, Json],
+                cli(["workspace", "list"], token="invalid-jwt", expected=3),
+            )
+            assert cast(dict[str, Json], error["error"])["code"] == "AUTH_ERROR"
             check_no_model_work()
 
     except Exception:
