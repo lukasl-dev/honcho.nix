@@ -10,6 +10,13 @@
       flake = false;
     };
 
+    pi-honcho-memory = {
+      url = "github:agneym/pi-honcho-memory/d088e7b388def441b7423e0e4990ddc056b60205";
+      flake = false;
+    };
+
+    pi.url = "github:lukasl-dev/pi.nix";
+
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -56,6 +63,9 @@
               src = inputs.honcho;
               inherit pythonSet;
             };
+            pi-honcho-memory = pkgs.callPackage ./pi-honcho-memory/package.nix {
+              src = inputs.pi-honcho-memory;
+            };
 
             docs-md =
               let
@@ -74,6 +84,11 @@
           };
 
           checks = {
+            pi-honcho-memory = import ./tests/pi-honcho-memory.nix {
+              inherit pkgs;
+              inherit (inputs) pi;
+              extension = self'.packages.pi-honcho-memory;
+            };
             cli-unit =
               pkgs.runCommand "honcho-cli-unit-tests"
                 {
@@ -180,6 +195,7 @@
         overlays.default = _final: prev: {
           honcho = inputs.self.packages.${prev.stdenv.hostPlatform.system}.honcho;
           honcho-cli = inputs.self.packages.${prev.stdenv.hostPlatform.system}.honcho-cli;
+          pi-honcho-memory = inputs.self.packages.${prev.stdenv.hostPlatform.system}.pi-honcho-memory;
         };
       };
     };

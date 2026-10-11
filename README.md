@@ -46,4 +46,19 @@ For external PostgreSQL, set `database.createLocally = false` and supply `DB_CON
 
 Back up before upgrades. Changing existing embedding models/dimensions requires explicit schema/re-embedding work with `honcho-configure-embeddings`, not just new settings. Use HTTPS and retain authentication when exposing the API.
 
-The daily GitHub cron builds and tests stable release updates before committing and tagging them.
+The daily GitHub cron builds and tests stable Honcho release updates before committing and tagging them.
+
+## Pi memory extension
+
+```nix
+pi.coding-agent.extensions = [
+  "${inputs.honcho.packages.${pkgs.stdenv.hostPlatform.system}.pi-honcho-memory}/extensions/index.ts"
+];
+pi.coding-agent.environment = {
+  HONCHO_URL.value = "http://127.0.0.1:8000";
+  HONCHO_API_KEY.file = "/run/secrets/honcho-client-jwt";
+  HONCHO_WORKSPACE_ID.value = "default";
+};
+```
+
+The API key must be a client JWT, not the server's signing key. The extension also reads `~/.honcho/config.json`; its URL variable is `HONCHO_URL`, not the CLI's `HONCHO_BASE_URL`.
