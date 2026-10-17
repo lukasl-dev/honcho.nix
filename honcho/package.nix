@@ -44,11 +44,6 @@ stdenvNoCC.mkDerivation {
     mkdir -p $out/share/honcho $out/bin
     cp -R src migrations scripts alembic.ini pyproject.toml LICENSE $out/share/honcho/
 
-    substituteInPlace $out/share/honcho/src/db.py \
-      --replace-fail 'Config("alembic.ini")' 'Config("'"$out"'/share/honcho/alembic.ini")'
-    substituteInPlace $out/share/honcho/alembic.ini \
-      --replace-fail 'script_location = migrations' 'script_location = %(here)s/migrations'
-
     wrapperArgs=(
       --prefix PYTHONPATH : "$out/share/honcho"
       --set-default TIKTOKEN_CACHE_DIR ${tokenCache}

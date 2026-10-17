@@ -99,16 +99,16 @@
     "honcho": {
       "flake": false,
       "locked": {
-        "lastModified": 1790783987,
-        "narHash": "sha256-g7RO8gMNZYSoEyw4Py+ORB/PYibwTIonHghmSO7Ms3c=",
+        "lastModified": 1791562010,
+        "narHash": "sha256-Ec6qswT0bSD0VsghRoixwT5rD+MoTeFTeRnfGjEXF+o=",
         "owner": "plastic-labs",
         "repo": "honcho",
-        "rev": "06ed1929cf017c333a87c41d130bb6a0605d91c0",
+        "rev": "608aec8a928da13c540262ed980c569448fb53ab",
         "type": "github"
       },
       "original": {
         "owner": "plastic-labs",
-        "ref": "v3.2.2",
+        "ref": "v3.3.0",
         "repo": "honcho",
         "type": "github"
       }
