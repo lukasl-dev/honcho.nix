@@ -6,7 +6,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     honcho = {
-      url = "github:plastic-labs/honcho/v3.4.1";
+      url = "github:plastic-labs/honcho/v3.5.0";
       flake = false;
     };
 
