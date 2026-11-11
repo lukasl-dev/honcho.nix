@@ -5,9 +5,11 @@ from importlib import metadata, resources
 from pathlib import Path
 
 from honcho import Honcho
+from honcho_cli import __version__
 from honcho_cli.config import CLIConfig, CONFIG_FILE
 
 assert metadata.version("honcho-cli") == sys.argv[1]
+assert __version__ == metadata.version("honcho-cli")
 assert metadata.version("honcho-ai") == sys.argv[2]
 assert callable(Honcho)
 

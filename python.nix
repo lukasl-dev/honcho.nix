@@ -16,13 +16,21 @@ in
     pyproject-build-systems.overlays.wheel
     (workspace.mkPyprojectOverlay { sourcePreference = "wheel"; })
     (final: prev: {
-      # Upstream 0.2.1 still reports 0.2.0 at runtime.
+      # These upstream CLI releases left __version__ behind the package metadata.
       honcho-cli = prev.honcho-cli.overrideAttrs (
         old:
-        lib.optionalAttrs (old.version == "0.2.1") {
+        let
+          reportedVersion =
+            {
+              "0.2.1" = "0.2.0";
+              "0.5.0" = "0.4.0";
+            }
+            .${old.version} or null;
+        in
+        lib.optionalAttrs (reportedVersion != null) {
           postPatch = (old.postPatch or "") + ''
             substituteInPlace src/honcho_cli/__init__.py \
-              --replace-fail '__version__ = "0.2.0"' '__version__ = "0.2.1"'
+              --replace-fail '__version__ = "${reportedVersion}"' '__version__ = "${old.version}"'
           '';
         }
       );
